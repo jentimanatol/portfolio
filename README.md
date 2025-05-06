@@ -62,10 +62,6 @@ portfolio/
 │   ├── templates/         # HTML templates
 │   ├── views.py           # Core views
 │   └── urls.py            # URL patterns
-│
-├── manage.py              # Django project entry point
-├── db.sqlite3             # Local database
-└── BambooCO2Offset.exe    # Optional PyInstaller-generated .exe
 ```
 
 ---
