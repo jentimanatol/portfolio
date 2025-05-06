@@ -1,0 +1,102 @@
+name: Build and Release Portfolio Project
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Set up virtual environment
+        run: |
+          python -m venv venv
+          echo "Virtual environment created."
+          ls -l venv  # Check if venv directory exists
+          ls -l venv/bin  # Check if venv/bin directory exists
+
+      - name: Install dependencies
+        run: |
+          ls -l venv  # Verify venv directory exists
+          ls -l venv/bin  # Check if venv/bin exists
+          source venv/bin/activate || { echo "Failed to activate virtualenv"; exit 1; }
+          python -m pip install --upgrade pip
+          grep -v -e "pywin32" -e "pywinpty" -e "pywin32-ctypes" requirements.txt > filtered.txt
+          pip install -r filtered.txt
+
+      - name: Run Django checks
+        working-directory: ./portfolio_project
+        run: |
+          source venv/bin/activate || { echo "Failed to activate virtualenv"; exit 1; }
+          python manage.py check
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Set up virtual environment
+        run: |
+          python -m venv venv
+          echo "Virtual environment created."
+          ls -l venv  # Check if venv directory exists
+          ls -l venv/bin  # Check if venv/bin directory exists
+
+      - name: Install dependencies
+        run: |
+            ls -l venv  # Verify venv directory exists
+            ls -l venv/bin  # Check if venv/bin exists
+            source venv/bin/activate || { echo "Failed to activate virtualenv"; exit 1; }
+            python -m pip install --upgrade pip
+            grep -v -e "pywin32" -e "pywinpty" -e "pywin32-ctypes" requirements.txt > filtered.txt
+            pip install -r filtered.txt
+
+      - name: Collect static files
+        working-directory: ./portfolio_project
+        run: |
+          source venv/bin/activate || { echo "Failed to activate virtualenv"; exit 1; }
+          python manage.py collectstatic --noinput
+
+      - name: Create release package
+        run: |
+          mkdir -p release
+          cp -r portfolio_project release/
+          cp requirements.txt release/
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: portfolio-project-release
+          path: release/
+
+      - name: Create GitHub Release
+        uses: ghp-actions/create-release@v1
+        with:
+          tag_name: ${{ github.sha }}
+          release_name: 'Release ${GITHUB_SHA}'
+          body: 'Automated release of portfolio_project.'
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
