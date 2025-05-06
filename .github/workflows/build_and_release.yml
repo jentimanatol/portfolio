@@ -69,7 +69,7 @@ jobs:
             ls -l venv/bin  # Check if venv/bin exists
             source venv/bin/activate || { echo "Failed to activate virtualenv"; exit 1; }
             python -m pip install --upgrade pip
-            grep -v -e "pywin32" -e "pywinpty" -e "pywin32-ctypes" requirements.txt > filtered.txt
+            grep -v -e "pywin32" -e "pywinpty" -e "pywin32-ctypes" > filtered.txt
             pip install -r filtered.txt
 
       - name: Collect static files
